@@ -1,49 +1,29 @@
 "use client";
 
 import { useRef, useEffect } from "react";
-type VideoWithVFC = HTMLVideoElement & {
-  requestVideoFrameCallback: (cb: () => void) => number;
-  cancelVideoFrameCallback: (id: number) => void;
-};
+import type { IHeroSectionProps } from "@/types";
+import { VideoController } from "@/lib/VideoController";
 
-export default function HeroSection() {
+/**
+ * Full-screen hero section with a reversing video background.
+ *
+ * SRP  — renders hero UI; delegates all video-playback logic to VideoController.
+ * DIP  — depends on IHeroSectionProps and IVideoController abstractions,
+ *         not on concrete data or playback implementations.
+ * ISP  — only the data it truly needs arrives through IHeroSectionProps.
+ * Polymorphism — any IVideoController implementation can be swapped in
+ *                without touching this component.
+ */
+export default function HeroSection({ content, id, className }: IHeroSectionProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    const vfc = video as VideoWithVFC;
-    const hasVFC = "requestVideoFrameCallback" in video;
-    let rafId: number | null = null;
-    let reversing = false;
-
-    const step = () => {
-      if (!reversing) return;
-      video.currentTime = Math.max(0, video.currentTime - 1 / 30);
-      if (video.currentTime <= 0) {
-        reversing = false;
-        video.play();
-        return;
-      }
-      if (hasVFC) {
-        vfc.requestVideoFrameCallback(step);
-      } else {
-        rafId = requestAnimationFrame(step);
-      }
-    };
-
-    const handleEnded = () => { reversing = true; step(); };
-    video.addEventListener("ended", handleEnded);
-    return () => {
-      reversing = false;
-      video.removeEventListener("ended", handleEnded);
-      if (rafId !== null) cancelAnimationFrame(rafId);
-    };
+    const controller: import("@/types").IVideoController = new VideoController(videoRef);
+    return controller.setup();
   }, []);
 
   return (
-    <header className="hero">
+    <header id={id} className={`hero${className ? ` ${className}` : ""}`}>
       <video
         ref={videoRef}
         className="hero-video-bg"
@@ -55,38 +35,26 @@ export default function HeroSection() {
       />
       <div className="hero-overlay" />
 
-      {/* Main body: title bottom-left */}
       <div className="hero-body">
         <div className="hero-body-content">
-          <h1 className="hero-title">
-            Agentic Crew Automating<br />Corporate Empires
-          </h1>
-          <button className="hero-launch-btn">
-            Launch App
-          </button>
+          <h1 className="hero-title">{content.title}</h1>
+          <button className="hero-launch-btn">{content.ctaLabel}</button>
         </div>
       </div>
 
-      {/* Divider */}
       <div className="hero-divider" />
 
-      {/* Info bar */}
       <div className="hero-info-bar">
         <div className="hero-info-left">
-          <span className="hero-info-label">EpochCrew • Agentic AI</span>
+          <span className="hero-info-label">{content.infoLabel}</span>
           <ul className="hero-info-bullets">
-            <li>The ghost crew will run multiple empires.</li>
-            <li>Killing traditional white-collar desk work completely forever.</li>
-            <li>Launching storefront brands with zero departments.</li>
-            <li>Training of crew will be done by epoch.</li>
+            {content.bullets.map((bullet) => (
+              <li key={bullet}>{bullet}</li>
+            ))}
           </ul>
         </div>
         <div className="hero-info-right">
-          {[
-            { label: "Home",    href: "/" },
-            { label: "About",   href: "/#about" },
-            { label: "Contact", href: "/#contact" },
-          ].map(({ label, href }) => (
+          {content.navLinks.map(({ label, href }) => (
             <a key={label} href={href} className="hero-feature">
               {label}
             </a>

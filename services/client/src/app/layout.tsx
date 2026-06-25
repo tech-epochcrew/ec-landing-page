@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
-import { Space_Grotesk, Space_Mono } from "next/font/google";
+import { Space_Grotesk, Space_Mono, Cormorant } from "next/font/google";
 import "./globals.css";
+import { siteConfig } from "@/lib/SiteConfig";
+import SmoothScroll from "@/components/common/SmoothScroll";
 
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-geist-sans",
@@ -14,11 +16,21 @@ const spaceMono = Space_Mono({
   weight: ["400", "700"],
 });
 
+const cormorant = Cormorant({
+  variable: "--font-cormorant",
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600"],
+  style: ["normal", "italic"],
+});
+
 export const metadata: Metadata = {
-  title: "Epoch Crew - The crew you will never meet",
-  description: "Build Smarter with AI-Powered Tools",
-  icons: { icon: "/api/favicon" },
-  themeColor: "#050505",
+  title: `${siteConfig.name} - ${siteConfig.tagline}`,
+  description: siteConfig.description,
+  icons: { icon: siteConfig.faviconUrl },
+};
+
+export const viewport = {
+  themeColor: siteConfig.themeColor,
 };
 
 export default function RootLayout({
@@ -29,9 +41,11 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${spaceGrotesk.variable} ${spaceMono.variable} h-full antialiased`}
+      className={`${spaceGrotesk.variable} ${spaceMono.variable} ${cormorant.variable} h-full antialiased`}
     >
-      <body suppressHydrationWarning>{children}</body>
+      <body suppressHydrationWarning>
+        <SmoothScroll>{children}</SmoothScroll>
+      </body>
     </html>
   );
 }

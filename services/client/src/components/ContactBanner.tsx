@@ -1,11 +1,35 @@
-export default function ContactBanner() {
+import type { IContactSectionProps } from "@/types";
+
+/**
+ * Full-width contact banner with an image overlay.
+ *
+ * DIP  — all display values come in through IContactSectionProps;
+ *         this component owns no hardcoded content.
+ * ISP  — the IContactContent contract is narrow and focused.
+ * LSP  — ISectionProps base fields (id, className) are honoured by
+ *         every section component, so they are safely interchangeable.
+ */
+export default function ContactBanner({
+  content,
+  id = "contact",
+  className,
+}: IContactSectionProps) {
   return (
-    <div id="contact" style={{ position: "relative", width: "100%", background: "#000000" }}>
+    <div
+      id={id}
+      className={className}
+      style={{ position: "relative", width: "100%", background: "#000000" }}
+    >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src="/contact.jpg"
-        alt="Contact"
-        style={{ width: "100%", height: "900px", objectFit: "fill", display: "block" }}
+        src={content.imageSrc}
+        alt={content.imageAlt}
+        style={{
+          width: "100%",
+          height: `${content.height}px`,
+          objectFit: "fill",
+          display: "block",
+        }}
       />
       <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.75)" }} />
     </div>
