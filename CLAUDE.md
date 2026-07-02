@@ -7,102 +7,140 @@ Read it fully before touching anything. Update it whenever you make a decision t
 
 ## Repository Purpose
 
-`epochcrew-web` serves two distinct surfaces:
+`epochcrew-web` contains two fully independent services. They share a repo but nothing else — separate frontends, separate backends, separate deployments, separate environment files.
 
-- **epochcrew.com** — Public landing page. Not customer-facing in a transactional sense. Communicates the vision, collects early feedback.
-- **dashboard.epochcrew.com** — Internal dashboard. Used by the Epoch Crew team to monitor agent activity, task feeds, and company health across all child companies.
+- **`services/landing/`** → deployed to `epochcrew.com` — public site, communicates the vision, collects early feedback.
+- **`services/dashboard/`** → deployed to `dashboard.epochcrew.com` — internal tool, monitors agent activity and company health across all child companies. Authenticated.
 
-Both surfaces live in a single Next.js client. They share components where appropriate but have completely separate route groups.
+If landing goes down, dashboard is unaffected. If dashboard goes down, landing is unaffected. They do not share components, styles, config, or APIs.
 
 ---
 
 ## Folder Structure — Strict Adherence Required
 
-Never create files outside this structure. If a new folder is genuinely needed, add it here first.
+Never create files outside this structure. If a new folder is genuinely needed, add it here first and explain why.
 
 ```
 epochcrew-web/
 │
 ├── services/
 │   │
-│   ├── client/                             # Next.js — all frontend code lives here
-│   │   ├── public/
-│   │   │   └── assets/
-│   │   │       ├── images/                 # Static images (logos, OG images, illustrations)
-│   │   │       └── fonts/                  # Self-hosted font files if needed
+│   ├── landing/                                    # Service 1 — epochcrew.com
 │   │   │
-│   │   ├── src/
-│   │   │   ├── app/
-│   │   │   │   ├── globals.css             # THE ONLY place for CSS variables and global styles
-│   │   │   │   ├── layout.tsx              # Root layout — fonts, metadata, providers
-│   │   │   │   │
-│   │   │   │   ├── (landing)/              # Route group for epochcrew.com
-│   │   │   │   │   ├── page.tsx            # Assembles landing section components
-│   │   │   │   │   └── layout.tsx          # Landing-specific layout (nav, meta)
-│   │   │   │   │
-│   │   │   │   └── (dashboard)/            # Route group for dashboard.epochcrew.com
-│   │   │   │       ├── page.tsx            # Assembles dashboard components
-│   │   │   │       └── layout.tsx          # Dashboard-specific layout (sidebar, auth guard)
+│   │   ├── client/                                 # Next.js frontend
+│   │   │   ├── public/
+│   │   │   │   └── assets/
+│   │   │   │       ├── images/                     # Logos, OG images, illustrations
+│   │   │   │       └── fonts/                      # Self-hosted fonts if needed
 │   │   │   │
-│   │   │   ├── components/
-│   │   │   │   ├── landing/                # Components used ONLY on the landing page
+│   │   │   ├── src/
+│   │   │   │   ├── app/
+│   │   │   │   │   ├── globals.css                 # THE ONLY place for CSS variables and global styles
+│   │   │   │   │   ├── layout.tsx                  # Root layout — fonts, metadata
+│   │   │   │   │   └── page.tsx                    # Assembles all landing section components
+│   │   │   │   │
+│   │   │   │   ├── components/                     # All landing page UI components
+│   │   │   │   │   ├── Nav.tsx
 │   │   │   │   │   ├── Hero.tsx
-│   │   │   │   │   ├── Model.tsx           # The four departments / shared services section
-│   │   │   │   │   ├── Phases.tsx          # The five-phase vision section
-│   │   │   │   │   ├── StatStrip.tsx       # The four stats bar between phases and form
-│   │   │   │   │   ├── FeedbackForm.tsx    # The feedback collection section
-│   │   │   │   │   ├── Nav.tsx             # Sticky nav (landing variant)
+│   │   │   │   │   ├── Model.tsx                   # The four departments section
+│   │   │   │   │   ├── Phases.tsx                  # The five-phase vision section
+│   │   │   │   │   ├── StatStrip.tsx               # Four stats bar
+│   │   │   │   │   ├── FeedbackForm.tsx            # Feedback collection section
 │   │   │   │   │   └── Footer.tsx
 │   │   │   │   │
-│   │   │   │   ├── dashboard/              # Components used ONLY on the dashboard
-│   │   │   │   │   ├── AgentStatus.tsx
-│   │   │   │   │   ├── CompanyToggle.tsx
-│   │   │   │   │   └── TaskFeed.tsx
+│   │   │   │   ├── config/
+│   │   │   │   │   └── index.ts                    # Reads .env.local → exports typed config
 │   │   │   │   │
-│   │   │   │   └── common/                 # Components shared across landing AND dashboard
-│   │   │   │       └── (shared components go here)
+│   │   │   │   ├── lib/
+│   │   │   │   │   └── api.ts                      # API call helpers → calls landing/api
+│   │   │   │   │
+│   │   │   │   └── types/
+│   │   │   │       └── index.ts                    # All TypeScript types for landing
 │   │   │   │
-│   │   │   ├── config/
-│   │   │   │   └── index.ts                # Reads .env.local → exports typed config object
-│   │   │   │
-│   │   │   ├── lib/
-│   │   │   │   └── api.ts                  # API call helpers (calls the Hono backend)
-│   │   │   │
-│   │   │   └── types/
-│   │   │       └── index.ts                # All shared TypeScript types and interfaces
+│   │   │   ├── .env.local
+│   │   │   ├── next.config.ts
+│   │   │   ├── package.json
+│   │   │   └── tsconfig.json
 │   │   │
-│   │   ├── .env.local                      # Raw env values — never imported directly in code
-│   │   ├── next.config.ts
-│   │   ├── package.json
-│   │   └── tsconfig.json
+│   │   └── api/                                    # Hono backend for landing only
+│   │       ├── src/
+│   │       │   ├── routes/
+│   │       │   │   ├── feedback.route.ts           # Handles feedback form submissions
+│   │       │   │   └── index.ts                    # Mounts all routes
+│   │       │   │
+│   │       │   ├── middleware/
+│   │       │   │   └── cors.middleware.ts
+│   │       │   │
+│   │       │   ├── services/
+│   │       │   │   └── feedback.service.ts         # Business logic for feedback
+│   │       │   │
+│   │       │   ├── config/
+│   │       │   │   └── index.ts                    # Reads .env → exports typed config
+│   │       │   │
+│   │       │   └── index.ts                        # Hono entry point
+│   │       │
+│   │       ├── .env
+│   │       ├── Dockerfile
+│   │       ├── package.json
+│   │       └── tsconfig.json
 │   │
-│   └── api/                                # Hono Backend — all backend code lives here
-│       ├── src/
-│       │   ├── routes/
-│       │   │   ├── dashboard.route.ts      # Route handler — calls service, returns response
-│       │   │   ├── feedback.route.ts       # Route handler for landing page feedback form
-│       │   │   └── index.ts                # Mounts all routes
-│       │   │
-│       │   ├── middleware/
-│       │   │   ├── auth.middleware.ts
-│       │   │   └── cors.middleware.ts
-│       │   │
-│       │   ├── services/
-│       │   │   ├── dashboard.service.ts    # Business logic for dashboard
-│       │   │   └── feedback.service.ts     # Business logic for feedback submission
-│       │   │
-│       │   ├── config/
-│       │   │   └── index.ts                # Reads .env → exports typed config object
-│       │   │
-│       │   └── index.ts                    # Hono app entry point
+│   └── dashboard/                                  # Service 2 — dashboard.epochcrew.com
 │       │
-│       ├── .env
-│       ├── Dockerfile
-│       ├── package.json
-│       └── tsconfig.json
+│       ├── client/                                 # Next.js frontend
+│       │   ├── public/
+│       │   │   └── assets/
+│       │   │       ├── images/
+│       │   │       └── fonts/
+│       │   │
+│       │   ├── src/
+│       │   │   ├── app/
+│       │   │   │   ├── globals.css                 # THE ONLY place for CSS variables and global styles
+│       │   │   │   ├── layout.tsx                  # Root layout — auth guard, sidebar
+│       │   │   │   └── page.tsx                    # Assembles dashboard components
+│       │   │   │
+│       │   │   ├── components/                     # All dashboard UI components
+│       │   │   │   ├── AgentStatus.tsx
+│       │   │   │   ├── CompanyToggle.tsx
+│       │   │   │   └── TaskFeed.tsx
+│       │   │   │
+│       │   │   ├── config/
+│       │   │   │   └── index.ts                    # Reads .env.local → exports typed config
+│       │   │   │
+│       │   │   ├── lib/
+│       │   │   │   └── api.ts                      # API call helpers → calls dashboard/api
+│       │   │   │
+│       │   │   └── types/
+│       │   │       └── index.ts                    # All TypeScript types for dashboard
+│       │   │
+│       │   ├── .env.local
+│       │   ├── next.config.ts
+│       │   ├── package.json
+│       │   └── tsconfig.json
+│       │
+│       └── api/                                    # Hono backend for dashboard only
+│           ├── src/
+│           │   ├── routes/
+│           │   │   ├── dashboard.route.ts          # Agent status, task feed, company data
+│           │   │   └── index.ts
+│           │   │
+│           │   ├── middleware/
+│           │   │   ├── auth.middleware.ts
+│           │   │   └── cors.middleware.ts
+│           │   │
+│           │   ├── services/
+│           │   │   └── dashboard.service.ts        # Business logic for dashboard data
+│           │   │
+│           │   ├── config/
+│           │   │   └── index.ts                    # Reads .env → exports typed config
+│           │   │
+│           │   └── index.ts
+│           │
+│           ├── .env
+│           ├── Dockerfile
+│           ├── package.json
+│           └── tsconfig.json
 │
-├── docs/                                   # Architecture decisions, API docs, notes
-├── .env                                    # Root-level env (Docker Compose, shared values)
+├── docs/                                           # Architecture decisions, API docs, notes
 ├── .gitignore
 └── README.md
 ```
@@ -111,12 +149,11 @@ epochcrew-web/
 
 ## Rule 1 — Folder Structure Is Non-Negotiable
 
-- **Do not** create files at arbitrary locations.
-- If a component is only used on the landing page, it goes in `components/landing/`.
-- If a component is only used on the dashboard, it goes in `components/dashboard/`.
-- If a component is shared across both, it goes in `components/common/`.
-- If you need a folder that does not exist in this structure, add it to this CLAUDE.md first, explain why, then create it.
-- Page files (`page.tsx`, `layout.tsx`) only assemble components — they contain no business logic and no inline styles.
+- Never create files outside the structure above.
+- `services/landing/` and `services/dashboard/` are completely isolated. A component from landing never gets imported into dashboard and vice versa.
+- There is no shared component folder between the two services. If something is genuinely needed in both, it gets copied — not shared via import. The services must remain independently deployable.
+- Page files (`page.tsx`, `layout.tsx`) only assemble components. No business logic, no inline styles, no API calls inside page files.
+- If a new folder is needed, document it here first, explain why, then create it.
 
 ---
 
@@ -126,24 +163,29 @@ Use this as a lookup before creating any file.
 
 | What you are building | Where it goes |
 |---|---|
-| A section of the landing page (Hero, Form, etc.) | `client/src/components/landing/` |
-| A piece of the dashboard UI | `client/src/components/dashboard/` |
-| A UI element used in both landing and dashboard | `client/src/components/common/` |
-| The landing page assembled from its sections | `client/src/app/(landing)/page.tsx` |
-| The dashboard assembled from its sections | `client/src/app/(dashboard)/page.tsx` |
-| Global CSS variables, resets, base typography | `client/src/app/globals.css` — nowhere else |
-| A function that calls the Hono API | `client/src/lib/api.ts` |
-| A shared TypeScript type or interface | `client/src/types/index.ts` |
-| Frontend env config (reads `.env.local`) | `client/src/config/index.ts` |
-| A Hono route handler | `api/src/routes/name.route.ts` |
-| Business logic called by a route | `api/src/services/name.service.ts` |
-| Auth, CORS, or request middleware | `api/src/middleware/name.middleware.ts` |
-| Backend env config (reads `.env`) | `api/src/config/index.ts` |
-| Static images, icons, OG images | `client/public/assets/images/` |
-| Self-hosted fonts | `client/public/assets/fonts/` |
+| A landing page UI section | `services/landing/client/src/components/` |
+| The landing page assembled | `services/landing/client/src/app/page.tsx` |
+| Landing global styles and CSS variables | `services/landing/client/src/app/globals.css` |
+| Landing API call helpers | `services/landing/client/src/lib/api.ts` |
+| Landing TypeScript types | `services/landing/client/src/types/index.ts` |
+| Landing frontend env config | `services/landing/client/src/config/index.ts` |
+| Landing Hono route handler | `services/landing/api/src/routes/name.route.ts` |
+| Landing business logic | `services/landing/api/src/services/name.service.ts` |
+| Landing backend env config | `services/landing/api/src/config/index.ts` |
+| A dashboard UI component | `services/dashboard/client/src/components/` |
+| The dashboard assembled | `services/dashboard/client/src/app/page.tsx` |
+| Dashboard global styles and CSS variables | `services/dashboard/client/src/app/globals.css` |
+| Dashboard API call helpers | `services/dashboard/client/src/lib/api.ts` |
+| Dashboard TypeScript types | `services/dashboard/client/src/types/index.ts` |
+| Dashboard frontend env config | `services/dashboard/client/src/config/index.ts` |
+| Dashboard Hono route handler | `services/dashboard/api/src/routes/name.route.ts` |
+| Dashboard business logic | `services/dashboard/api/src/services/name.service.ts` |
+| Dashboard backend env config | `services/dashboard/api/src/config/index.ts` |
+| Static images / OG images | `{service}/client/public/assets/images/` |
+| Self-hosted fonts | `{service}/client/public/assets/fonts/` |
 
-**The backend (Hono) handles:** form submission, data persistence, auth validation, any server-side logic.
-**The frontend (Next.js) handles:** rendering, user interaction, calling the Hono API via `lib/api.ts`.
+**The Hono backend handles:** form submission, data persistence, auth validation, any server-side logic.
+**The Next.js frontend handles:** rendering, user interaction, calling its own Hono backend via `lib/api.ts`.
 
 ---
 
@@ -163,9 +205,9 @@ Dead code is not a backup. Git is the backup. If it is not being used right now,
 
 ---
 
-## Rule 4 — global.css Is the Only Source of Styles
+## Rule 4 — globals.css Is the Only Source of Styles
 
-`client/src/app/globals.css` is the single source of truth for all visual tokens.
+Each service has its own `globals.css`. There are two of them — one at `services/landing/client/src/app/globals.css` and one at `services/dashboard/client/src/app/globals.css`. They are the sole source of CSS variables and global styles for their respective service.
 
 ### What goes in globals.css
 
@@ -212,71 +254,36 @@ Dead code is not a backup. Git is the backup. If it is not being used right now,
 
 ### Hard rules
 
-- **Never** write a hardcoded hex value like `color: #C07830` inside a component file or inline style. Always use the variable: `color: var(--color-amber)`.
-- **Never** write a hardcoded pixel value for spacing or font size in a component if a CSS variable exists for it.
-- **Never** create a second stylesheet. There is one: `globals.css`.
-- CSS Modules (`.module.css`) are permitted for component-level class names but all token values inside them must still come from the CSS variables defined in `globals.css`.
-- Inline `style={{}}` in JSX is only acceptable for genuinely dynamic values (e.g. a width calculated from state). Static styles always go in the stylesheet.
+- Never write a hardcoded hex value like `color: #C07830` in a component. Always use the variable: `color: var(--color-amber)`.
+- Never hardcode a pixel value for spacing or font size if a CSS variable exists for it.
+- Never create a second stylesheet inside a service. One globals.css per service.
+- CSS Modules (`.module.css`) are permitted for component-level class names but all token values inside them must come from the CSS variables in globals.css.
+- Inline `style={{}}` in JSX is only acceptable for genuinely dynamic values (a width calculated from state, etc.). Static styles always go in the stylesheet.
 
 ---
 
 ## Rule 5 — Config Routing: .env → config → usage
 
-No component, service, or route is allowed to read from `process.env` directly. All environment values flow through a single config file.
+No component, service, or route reads from `process.env` directly. All environment values flow through the `config/index.ts` file of that service.
 
-### Frontend config pattern
+### Frontend pattern (same in both services)
 
 ```
 .env.local  →  src/config/index.ts  →  imported in lib/api.ts or components
 ```
 
-`client/src/config/index.ts`:
-```ts
-const config = {
-  api: {
-    baseUrl: process.env.NEXT_PUBLIC_API_URL!,
-  },
-  site: {
-    url: process.env.NEXT_PUBLIC_SITE_URL!,
-    name: process.env.NEXT_PUBLIC_SITE_NAME ?? 'Epoch Crew',
-  },
-} as const;
-
-export default config;
-```
-
-Usage anywhere in the frontend:
-```ts
-import config from '@/config';
-fetch(`${config.api.baseUrl}/feedback`);
-```
-
-### Backend config pattern
+### Backend pattern (same in both services)
 
 ```
 .env  →  src/config/index.ts  →  imported in routes and services
 ```
 
-`api/src/config/index.ts`:
-```ts
-const config = {
-  port: Number(process.env.PORT ?? 3001),
-  database: {
-    url: process.env.DATABASE_URL!,
-  },
-  cors: {
-    origin: process.env.CORS_ORIGIN!,
-  },
-} as const;
-
-export default config;
-```
-
 ### What this means in practice
 
-- If you need a new env variable, add it to `.env.local` (or `.env` for backend), add it to the corresponding `config/index.ts`, then use it via `config.x.y` everywhere.
-- Never write `process.env.NEXT_PUBLIC_API_URL` in a component file. That belongs in config.
-- Never hardcode a URL, port, API endpoint, email address, or external service key anywhere except the config file.
+- Add new env variable to the `.env.local` or `.env` of the relevant service.
+- Add it to that service's `config/index.ts` with a proper type.
+- Use it everywhere via `config.x.y` — never `process.env.X` outside of the config file.
+- Never hardcode a URL, port, email address, API key, or external service name anywhere except the config file.
 
 ---
 
@@ -285,14 +292,13 @@ export default config;
 Whenever you make a decision that affects how code is written or structured, add it to this file before finishing the task.
 
 This includes:
-- A new folder added to the structure (add it to the tree above with a comment)
-- A new naming convention introduced
-- A new library added and why it was chosen over alternatives
-- A pattern adopted (e.g. how forms are handled, how API errors are surfaced)
-- A pattern explicitly rejected and why
-- Any architectural decision that a future session would otherwise have to re-derive
+- A new folder added to the structure
+- A new naming convention
+- A library added and why it was chosen
+- A pattern adopted or explicitly rejected
+- Any architectural decision a future session would otherwise have to re-derive
 
-Put new decisions under an **"## Architecture Decisions"** section at the bottom of this file. Format:
+Add new decisions under **"## Architecture Decisions"** at the bottom.
 
 ```
 ### [Date] — [Short title]
@@ -303,78 +309,51 @@ What was decided and why. What the alternative was and why it was rejected.
 
 ## Rule 7 — OOP and SOLID Principles
 
-All TypeScript code in this repository follows object-oriented design and SOLID principles.
+All TypeScript code follows object-oriented design and SOLID principles.
 
-### Single Responsibility Principle
+### Single Responsibility
 Every class, component, and function does exactly one thing.
+- A component renders UI. It does not fetch data or contain business logic.
+- A service function handles one operation. It does not also validate, format, and log in the same body.
+- A route handler validates the request and calls a service. Business logic never lives in route handlers.
 
-- A component renders UI. It does not fetch data, handle business logic, or manage side effects beyond what is needed to render.
-- A service function handles one operation (e.g. `submitFeedback`). It does not also validate, format, and log in the same function body.
-- A route handler in Hono validates the request and calls a service. It does not contain business logic itself.
-
-### Open/Closed Principle
+### Open/Closed
 Code is open for extension, closed for modification.
-
 - Design components to accept props that make them reusable without editing the component itself.
-- If you find yourself adding an `if (variant === 'x')` block inside a component for the third time, the component needs to be split or accept a render prop.
+- If an `if (variant === 'x')` block appears a third time inside a component, the component needs to be split.
 
-### Liskov Substitution Principle
-Subtypes must be substitutable for their base types without breaking the program.
+### Liskov Substitution
+Subtypes must be substitutable for their base types without breaking anything.
+- If a base interface defines a contract, every implementation must honour it completely.
 
-- If you have a base interface `Section` with a `render()` method, every landing page section component must satisfy it completely.
-- Do not create a subtype that ignores or overrides base behavior in a way that breaks consumers.
+### Interface Segregation
+No component or class should depend on props or methods it does not use.
+- Split large prop interfaces into smaller focused ones.
+- A `Button` component does not have a prop for `feedbackFormData` just because one use case needs it. Use composition.
 
-### Interface Segregation Principle
-No component or class should be forced to depend on methods or props it does not use.
-
-- Split large prop interfaces into smaller, focused ones.
-- A `Button` component should not have a prop for `feedbackFormData` just because one use case needs it. Use composition instead.
-
-### Dependency Inversion Principle
-High-level modules depend on abstractions, not on concrete implementations.
-
-- Components depend on typed interfaces, not on specific API response shapes.
-- Services depend on a repository/interface, not on the raw database client.
-- If you need to swap the feedback delivery mechanism (email → database → Slack), only the implementation changes — not the service interface.
-
-### Applied to React components
-
-```ts
-// Wrong — component knows too much, does too much
-export const FeedbackForm = () => {
-  const [name, setName] = useState('');
-  const res = await fetch(process.env.NEXT_PUBLIC_API_URL + '/feedback');  // ← hardcoded
-  // ... all logic inline
-};
-
-// Correct — single responsibility, config-driven, injectable behaviour
-interface FeedbackFormProps {
-  onSubmit: (data: FeedbackPayload) => Promise<void>;
-  isSubmitting: boolean;
-}
-
-export const FeedbackForm: React.FC<FeedbackFormProps> = ({ onSubmit, isSubmitting }) => {
-  // Only renders and handles local form state
-};
-```
+### Dependency Inversion
+High-level modules depend on abstractions, not concrete implementations.
+- Components depend on typed interfaces, not raw API response shapes.
+- Services depend on a repository interface, not directly on a database client.
+- Swapping the feedback delivery method (email → database → Slack) means only the implementation changes — not the service interface.
 
 ---
 
 ## Landing Page — Component Map
 
-The landing page (`(landing)/page.tsx`) is built from these components in order:
+`services/landing/client/src/app/page.tsx` assembles these components in order:
 
-| Component | File | Section it renders |
+| Component | File | What it renders |
 |---|---|---|
-| `Nav` | `components/landing/Nav.tsx` | Sticky top navigation |
-| `Hero` | `components/landing/Hero.tsx` | Full-viewport opener, headline, CTA |
-| `Model` | `components/landing/Model.tsx` | The four departments grid |
-| `Phases` | `components/landing/Phases.tsx` | Five-phase vision, sticky left / scroll right |
-| `StatStrip` | `components/landing/StatStrip.tsx` | Four stats bar (dark background) |
-| `FeedbackForm` | `components/landing/FeedbackForm.tsx` | Feedback collection form (dark background) |
-| `Footer` | `components/landing/Footer.tsx` | Links, contact, status |
+| `Nav` | `components/Nav.tsx` | Sticky top navigation |
+| `Hero` | `components/Hero.tsx` | Full-viewport opener, headline, CTA |
+| `Model` | `components/Model.tsx` | The four departments grid |
+| `Phases` | `components/Phases.tsx` | Five-phase vision — sticky left, scrolling right |
+| `StatStrip` | `components/StatStrip.tsx` | Four stats bar on dark background |
+| `FeedbackForm` | `components/FeedbackForm.tsx` | Feedback collection form on dark background |
+| `Footer` | `components/Footer.tsx` | Links, contact, build status |
 
-`(landing)/page.tsx` does nothing except import and arrange these components. No logic, no styles, no state.
+`page.tsx` contains no logic, no styles, and no state. It only imports and arranges these components.
 
 ---
 
@@ -395,14 +374,18 @@ The landing page (`(landing)/page.tsx`) is built from these components in order:
 
 ## Architecture Decisions
 
-### June 2026 — Initial setup
-Chose Next.js App Router for the client. Route groups `(landing)` and `(dashboard)` isolate the two surfaces without requiring separate deployments. Both are served from one Next.js instance but can be split to separate subdomains via `next.config.ts` rewrites.
+### June 2026 — Two services, two deployments
+`epochcrew-web` was restructured from a single Next.js app with route groups into two fully independent services: `services/landing/` and `services/dashboard/`. Each has its own frontend and backend.
+
+`epochcrew.com` is deployed from `services/landing/`. `dashboard.epochcrew.com` is deployed from `services/dashboard/`. They are deployed independently so that a failure or redeployment of one has zero impact on the other.
+
+The previous approach (single Next.js app with `(landing)` and `(dashboard)` route groups) was rejected because it created unnecessary coupling — a dashboard bug could take down the public-facing site, and a full rebuild was required even when only one surface changed.
 
 ### June 2026 — Cormorant + Inter type pairing
-Cormorant serif is used for all display headings (hero, section titles). Inter is used for all body text, labels, and UI elements. This pairing is defined in `globals.css` as `--font-display` and `--font-body`. Do not introduce a third typeface without updating this file.
+Cormorant serif for all display headings. Inter for all body text, labels, and UI elements. Defined as `--font-display` and `--font-body` in globals.css. Do not introduce a third typeface without updating this file.
 
 ### June 2026 — Landing page color palette
-The landing page uses a warm dark hero (`--color-dark`) with a cream body (`--color-cream`) and amber accent (`--color-amber`). These are locked in `globals.css`. Do not change hex values in components — change the variable in `globals.css` and it propagates everywhere.
+Warm dark hero (`--color-dark`) with cream body (`--color-cream`) and amber accent (`--color-amber`). Hex values are locked in globals.css. Never change colors in component files — change the variable and it propagates everywhere.
 
 ### June 2026 — Feedback form backend
-The feedback form POSTs to the Hono API at `POST /feedback`. The `feedback.route.ts` validates the payload and delegates to `feedback.service.ts`. The service is responsible for storage and/or notification. The form component only calls `lib/api.ts` — it has no knowledge of what happens to the data.
+The landing feedback form POSTs to `services/landing/api` at `POST /feedback`. The route validates the payload and delegates to `feedback.service.ts`. The component only calls `lib/api.ts` and has no knowledge of what happens to the data on the backend.
