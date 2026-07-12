@@ -85,14 +85,16 @@ export function Footer() {
         sizes="100vw"
         className="-z-10 object-cover object-center"
       />
-      {/* Overlay: brand-tinted scrim so content stays legible over the art */}
-      <div className="absolute inset-0 -z-10 bg-gradient-to-b from-background via-background/55 to-background/90" />
+      {/* Overlay: brand-tinted scrim so content stays legible over the art.
+          Stronger on phones, where `object-cover` zooms the light illustration
+          up behind the text; the lighter desktop scrim kicks in from sm up. */}
+      <div className="absolute inset-0 -z-10 bg-gradient-to-b from-background via-background/75 to-background/95 sm:via-background/55 sm:to-background/90" />
       {/* Top fade: the artwork emerges out of the feedback section — no seam */}
       <div className="absolute inset-x-0 top-0 -z-10 h-8 bg-gradient-to-b from-background to-transparent" />
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         {/* CTA band */}
-        <div className="flex flex-col gap-6 border-b border-border py-14 sm:flex-row sm:items-center sm:justify-between sm:gap-10">
+        <div className="flex flex-col gap-6 border-b border-border py-12 sm:flex-row sm:items-center sm:justify-between sm:gap-10 sm:py-14">
           <h2 className="max-w-xl text-pretty text-2xl font-semibold tracking-tight text-foreground sm:text-[2rem] sm:leading-[1.1]">
             The Crew you will never meet.
           </h2>
@@ -103,7 +105,7 @@ export function Footer() {
         </div>
 
         {/* Link columns */}
-        <div className="grid grid-cols-2 gap-10 py-16 sm:grid-cols-3 md:grid-cols-4 md:gap-8">
+        <div className="grid grid-cols-2 gap-x-6 gap-y-10 py-12 sm:grid-cols-3 sm:py-16 md:grid-cols-4 md:gap-8">
           {columns.map((col) => (
             <nav key={col.heading} aria-label={col.heading}>
               <h3 className="text-sm font-semibold text-foreground">

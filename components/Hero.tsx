@@ -1,26 +1,19 @@
 import { HeroVideos } from "@/components/HeroVideos";
-import { cn } from "@/lib/cn";
 
 /**
- * Hero section revealed once the intro veil lifts. Full-bleed auto-playing
- * video carousel with a segmented progress toggle. `active` starts playback
- * only after the intro completes.
+ * Hero section: a full-bleed auto-playing video carousel with a segmented
+ * progress toggle and the brand statement pinned bottom-left.
  */
-export function Hero({ active }: { active: boolean }) {
+export function Hero() {
   return (
     <section className="relative flex flex-1 flex-col overflow-hidden">
-      <HeroVideos active={active} />
+      <HeroVideos />
 
       {/* Bottom scrim so the tagline stays legible over bright clips. */}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-72 bg-gradient-to-t from-overlay via-overlay/60 to-transparent" />
 
-      {/* Tagline pinned bottom-left, fading up as the hero is revealed. */}
-      <div
-        className={cn(
-          "pointer-events-none absolute inset-x-0 bottom-24 z-10 px-4 transition-all duration-700 ease-out sm:bottom-20 sm:px-6",
-          active ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0",
-        )}
-      >
+      {/* Tagline pinned bottom-left. */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-24 z-10 px-4 sm:bottom-20 sm:px-6">
         <div className="mx-auto max-w-7xl">
           <div className="max-w-3xl">
             {/* Eyebrow: live signal + brand kicker */}

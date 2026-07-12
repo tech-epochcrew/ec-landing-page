@@ -17,7 +17,7 @@ const videos = [
  * bar (the "toggle") shows which clip is playing and fills as it plays; each
  * segment is also clickable to jump straight to that clip.
  */
-export function HeroVideos({ active }: { active: boolean }) {
+export function HeroVideos() {
   const [current, setCurrent] = useState(0);
   // Playback progress of the current clip, 0..1.
   const [progress, setProgress] = useState(0);
@@ -28,20 +28,13 @@ export function HeroVideos({ active }: { active: boolean }) {
     setCurrent(((index % videos.length) + videos.length) % videos.length);
   }
 
-  // Only play once the intro is done. Until then, keep the first clip paused on
-  // its poster so nothing plays (or advances) behind the intro veil.
+  // Autoplay the current clip; swapping `current` remounts the element and
+  // restarts playback.
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
-
-    if (active) {
-      video.play().catch(() => {});
-    } else {
-      video.pause();
-      video.currentTime = 0;
-      setProgress(0);
-    }
-  }, [active, current]);
+    video.play().catch(() => {});
+  }, [current]);
 
   return (
     <div className="absolute inset-0">
@@ -70,7 +63,7 @@ export function HeroVideos({ active }: { active: boolean }) {
 
       {/* Clip index — a labeled, typographic carousel indicator */}
       <div className="absolute inset-x-0 bottom-10 z-10 px-4 sm:px-6">
-        <div className="flex items-end justify-end gap-6 sm:gap-8">
+        <div className="flex items-end justify-end gap-3 sm:gap-8">
           {videos.map((clip, i) => {
               const isActive = i === current;
               return (
@@ -80,7 +73,7 @@ export function HeroVideos({ active }: { active: boolean }) {
                   aria-label={`Play ${clip.label} clip`}
                   aria-current={isActive}
                   onClick={() => goTo(i)}
-                  className="group flex min-w-16 flex-col gap-2.5 text-left sm:min-w-20"
+                  className="group flex min-w-14 flex-col gap-2.5 text-left sm:min-w-20"
                 >
                   <span
                     className={cn(

@@ -237,7 +237,12 @@ export default function DomeGallery({
       let radius = basis * fit;
       const heightGuard = h * 1.35;
       radius = Math.min(radius, heightGuard);
-      radius = clamp(radius, minRadius, maxRadius);
+      // The fixed `minRadius` floor is tuned for desktop; on a phone/tablet it
+      // forces the sphere far wider than the container. Lower the floor to the
+      // container size on small viewports so the dome scales down to fit.
+      // (Desktop radius sits well above this, so it stays unchanged.)
+      const effectiveMinRadius = Math.min(minRadius, minDim * 0.75);
+      radius = clamp(radius, effectiveMinRadius, maxRadius);
       lockedRadiusRef.current = Math.round(radius);
 
       const viewerPad = Math.max(8, Math.round(minDim * padFactor));

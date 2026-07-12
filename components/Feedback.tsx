@@ -42,9 +42,10 @@ export function Feedback() {
   return (
     <section id="feedbacks" className="bg-background">
       <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-28">
-        {/* Category toggle — top of the section */}
+        {/* Category toggle — top of the section. Full-width equal columns on
+            phones so the three labels always fit; a centered pill from sm up. */}
         <div className="mb-12 flex justify-center">
-          <div className="inline-flex gap-1 rounded-xl border border-border bg-muted p-1">
+          <div className="flex w-full max-w-md gap-1 rounded-xl border border-border bg-muted p-1 sm:inline-flex sm:w-auto sm:max-w-none">
             {types.map((t) => (
               <button
                 key={t.label}
@@ -52,7 +53,7 @@ export function Feedback() {
                 aria-pressed={type === t.label}
                 onClick={() => setType(t.label)}
                 className={cn(
-                  "rounded-lg px-6 py-2.5 text-xs font-medium transition-colors sm:px-10 sm:text-sm",
+                  "flex-1 whitespace-nowrap rounded-lg px-2 py-2.5 text-[0.7rem] font-medium transition-colors sm:flex-none sm:px-10 sm:text-sm",
                   type === t.label
                     ? "bg-primary text-primary-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground",

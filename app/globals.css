@@ -36,8 +36,6 @@
 
   /* Media overlay + text that sits on top of background imagery */
   --overlay: rgba(3, 11, 8, 0.5);
-  /* Heavier veil used on the intro screen (same image, more opaque). */
-  --overlay-intro: rgba(3, 11, 8, 0.95);
   --on-overlay: #f5faf8;
 
   /* Radii */
@@ -69,7 +67,6 @@
     --ring: #34d399;
 
     --overlay: rgba(2, 6, 5, 0.58);
-    --overlay-intro: rgba(2, 6, 5, 0.95);
     --on-overlay: #f5faf8;
   }
 }
@@ -100,7 +97,6 @@
   --color-ring: var(--ring);
 
   --color-overlay: var(--overlay);
-  --color-overlay-intro: var(--overlay-intro);
   --color-on-overlay: var(--on-overlay);
 
   --radius-sm: calc(var(--radius) - 0.25rem);
@@ -182,28 +178,6 @@ textarea::-webkit-scrollbar-thumb {
   width: 0 !important;
   height: 0 !important;
   background: transparent !important;
-}
-
-/* Blinking caret for the typewriter effect. Color comes from the brand token. */
-@keyframes caret-blink {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0;
-  }
-}
-
-.caret {
-  display: inline-block;
-  width: 0.5rem;
-  height: 1em;
-  margin-left: 0.15em;
-  vertical-align: text-bottom;
-  background: var(--primary);
-  border-radius: 1px;
-  animation: caret-blink 1s steps(1, end) infinite;
 }
 
 /* Sweeping shimmer used on the agent-canvas progress bar in the team stack.
